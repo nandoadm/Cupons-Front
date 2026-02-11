@@ -1,0 +1,1049 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Painel Admin — Categorias, Lojas & Cupons</title>
+  <style>
+    :root{
+      --bg:#0b0f17; --border:#1f2937; --text:#e5e7eb; --muted:#9ca3af;
+      --accent:#22c55e; --warn:#f59e0b; --danger:#ef4444; --info:#60a5fa;
+      --shadow: 0 10px 30px rgba(0,0,0,.25);
+      --radius: 14px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Arial, sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background: radial-gradient(1000px 600px at 10% 0%, rgba(96,165,250,.14), transparent 55%),
+                  radial-gradient(800px 600px at 90% 10%, rgba(34,197,94,.12), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+      font-family:var(--sans);
+    }
+    .wrap{max-width:1280px;margin:0 auto;padding:28px 16px 60px}
+    header{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+    .title{display:flex;flex-direction:column;gap:6px}
+    h1{margin:0;font-size:22px;letter-spacing:.2px}
+    .sub{color:var(--muted);font-size:13px}
+    .pill{
+      font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid var(--border);
+      color:var(--muted);background: rgba(255,255,255,.02);white-space:nowrap
+    }
+    .pill.ok{color:#bbf7d0;border-color: rgba(34,197,94,.35);background: rgba(34,197,94,.10)}
+    .pill.off{color:#fecaca;border-color: rgba(239,68,68,.35);background: rgba(239,68,68,.10)}
+    .tabs{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 16px}
+    .tabbtn{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:999px;
+      cursor:pointer;
+      font-weight:900;
+      font-size:13px;
+    }
+    .tabbtn.active{border-color: rgba(96,165,250,.35);background: rgba(96,165,250,.12)}
+    .row{display:grid;grid-template-columns: 420px 1fr;gap:16px;align-items:start}
+    @media (max-width: 980px){.row{grid-template-columns:1fr}}
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .card-h{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:14px;background: rgba(17,24,39,.55);border-bottom:1px solid var(--border);
+      gap:10px;flex-wrap:wrap;
+    }
+    .card-h b{font-size:14px}
+    .card-b{padding:14px}
+    .grid{display:grid;gap:10px}
+    label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
+    input, textarea, select{
+      width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--border);
+      background: rgba(15,23,42,.7);color:var(--text);outline:none
+    }
+    textarea{min-height:92px;resize:vertical}
+    input:focus, textarea:focus, select:focus{
+      border-color: rgba(96,165,250,.55);box-shadow: 0 0 0 4px rgba(96,165,250,.12)
+    }
+    .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    button{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:800;
+      font-size:13px;
+    }
+    .primary{border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.12)}
+    .danger{border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.12)}
+    .info{border-color: rgba(96,165,250,.35); background: rgba(96,165,250,.12)}
+    .warn{border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.12)}
+    .ghost{background:transparent}
+    .toolbar{
+      display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+      padding:12px 14px;border-bottom:1px solid var(--border);background: rgba(15,23,42,.35);
+    }
+    .toolbar .search{flex:1;min-width:220px}
+    .table{width:100%;border-collapse:collapse;font-size:13px}
+    .table th, .table td{
+      text-align:left;padding:10px 12px;border-bottom:1px solid rgba(31,41,55,.85);vertical-align:top
+    }
+    .table th{color:var(--muted);font-size:12px;font-weight:900}
+    .mono{font-family:var(--mono)}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
+    .muted{color:var(--muted)}
+    .msg{margin-top:10px;font-size:13px;color:var(--muted);line-height:1.45}
+    .toast{
+      position:fixed;right:16px;bottom:16px;background: rgba(17,24,39,.92);
+      border:1px solid var(--border);padding:10px 12px;border-radius:12px;box-shadow:var(--shadow);
+      max-width:420px;display:none;gap:10px;align-items:flex-start;z-index:9999
+    }
+    .toast.show{display:flex}
+    .dot{width:10px;height:10px;border-radius:999px;margin-top:4px;background: var(--info);flex:0 0 auto}
+    .dot.ok{background:var(--accent)}
+    .dot.bad{background:var(--danger)}
+    .dot.warn{background:var(--warn)}
+    .toast b{display:block;font-size:13px;margin-bottom:2px}
+    .toast p{margin:0;font-size:12px;color:var(--muted);white-space:pre-wrap}
+    .hidden{display:none !important}
+    .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media (max-width: 620px){.two{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="title">
+        <h1>Painel Admin — Categorias, Lojas & Cupons</h1>
+        <div class="sub">API base: <span class="mono">http://localhost:8080</span></div>
+      </div>
+      <span id="apiStatus" class="pill">API: não testada</span>
+    </header>
+
+    <div class="tabs">
+      <button class="tabbtn active" id="tabCat" type="button">Categorias</button>
+      <button class="tabbtn" id="tabStore" type="button">Lojas</button>
+      <button class="tabbtn" id="tabCoupon" type="button">Cupons</button>
+
+      <div style="flex:1"></div>
+
+      <button class="tabbtn" id="btnPing" type="button">Testar API</button>
+      <button class="tabbtn" id="btnReload" type="button">Recarregar</button>
+    </div>
+
+    <!-- ===================== CATEGORIAS ===================== -->
+    <section id="panelCat">
+      <div class="row">
+        <section class="card">
+          <div class="card-h"><b id="catFormTitle">Nova categoria</b><span id="catModePill" class="pill">modo: criar</span></div>
+          <div class="card-b">
+            <form id="catForm" class="grid" autocomplete="off">
+              <div><label>categoryId</label><input id="catId" class="mono" disabled placeholder="(gerado pela API)" /></div>
+              <div><label>categoryName</label><input id="catName" required placeholder="Ex: Suplementos" /></div>
+              <div><label>categorySlug</label><input id="catSlug" placeholder="Ex: suplementos" /></div>
+              <div><label>active</label>
+                <select id="catActive"><option value="true">true</option><option value="false">false</option></select>
+              </div>
+              <div class="btns">
+                <button type="submit" class="primary" id="catBtnSave">Salvar</button>
+                <button type="button" class="ghost" id="catBtnReset">Limpar</button>
+                <button type="button" class="danger" id="catBtnDelete" style="display:none;">Excluir</button>
+              </div>
+              <div class="msg">• Se der FK ao excluir (cupom referenciando), use “Desativar”.</div>
+            </form>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-h"><b>Lista de categorias</b><span class="pill mono">/categoria</span></div>
+          <div class="toolbar">
+            <input id="catSearch" class="search" placeholder="Buscar por nome / slug / id..." />
+            <select id="catFilterActive" style="width:190px">
+              <option value="all">Todas</option><option value="true">Ativas</option><option value="false">Inativas</option>
+            </select>
+          </div>
+          <div style="overflow:auto">
+            <table class="table">
+              <thead><tr><th style="width:210px">ID</th><th>Nome</th><th>Slug</th><th style="width:120px">Ativa</th><th style="width:280px">Ações</th></tr></thead>
+              <tbody id="catTbody"><tr><td colspan="5" class="muted">Carregando...</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <!-- ===================== LOJAS ===================== -->
+    <section id="panelStore" class="hidden">
+      <div class="row">
+        <section class="card">
+          <div class="card-h"><b id="storeFormTitle">Nova loja</b><span id="storeModePill" class="pill">modo: criar</span></div>
+          <div class="card-b">
+            <form id="storeForm" class="grid" autocomplete="off">
+              <div><label>id</label><input id="storeId" class="mono" disabled placeholder="(gerado pela API)" /></div>
+              <div><label>storeName *</label><input id="storeName" required placeholder="Cupincha Store" /></div>
+              <div><label>storeSlug</label><input id="storeSlug" placeholder="cupincha-store" /></div>
+              <div><label>storeAddress *</label><input id="storeAddress" required placeholder="Rua X, 123 - Centro" /></div>
+              <div><label>storeImg</label><input id="storeImg" placeholder="https://..." /></div>
+              <div><label>storeDescription</label><textarea id="storeDesc" placeholder="Descrição..."></textarea></div>
+              <div><label>active</label>
+                <select id="storeActive"><option value="true">true</option><option value="false">false</option></select>
+              </div>
+              <div class="btns">
+                <button type="submit" class="primary" id="storeBtnSave">Salvar</button>
+                <button type="button" class="ghost" id="storeBtnReset">Limpar</button>
+                <button type="button" class="danger" id="storeBtnDelete" style="display:none;">Excluir</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-h"><b>Lista de lojas</b><span class="pill mono">/store</span></div>
+          <div class="toolbar">
+            <input id="storeSearch" class="search" placeholder="Buscar por nome / slug / id..." />
+            <select id="storeFilterActive" style="width:190px">
+              <option value="all">Todas</option><option value="true">Ativas</option><option value="false">Inativas</option>
+            </select>
+          </div>
+          <div style="overflow:auto">
+            <table class="table">
+              <thead><tr><th style="width:210px">ID</th><th>Nome</th><th>Slug</th><th>Endereço</th><th style="width:120px">Ativa</th><th style="width:300px">Ações</th></tr></thead>
+              <tbody id="storeTbody"><tr><td colspan="6" class="muted">Carregando...</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <!-- ===================== CUPONS ===================== -->
+    <section id="panelCoupon" class="hidden">
+      <div class="row">
+        <section class="card">
+          <div class="card-h"><b id="couponFormTitle">Novo cupom</b><span id="couponModePill" class="pill">modo: criar</span></div>
+          <div class="card-b">
+            <form id="couponForm" class="grid" autocomplete="off">
+              <div><label>id (se a API retornar)</label><input id="couponId" class="mono" disabled placeholder="(gerado pela API)" /></div>
+
+              <div class="two">
+                <div><label>title *</label><input id="cpTitle" required placeholder="Promoção de Verão" /></div>
+                <div><label>code *</label><input id="cpCode" required placeholder="VERAO2025" /></div>
+              </div>
+
+              <div><label>description *</label><textarea id="cpDesc" required placeholder="Descrição detalhada..."></textarea></div>
+
+              <div class="two">
+                <div><label>discount</label><input id="cpDiscount" inputmode="decimal" placeholder="20.00" /></div>
+                <div><label>active *</label>
+                  <select id="cpActive"><option value="true">true</option><option value="false">false</option></select>
+                </div>
+              </div>
+
+              <div><label>restrictions</label><textarea id="cpRestrictions" placeholder="Restrições..."></textarea></div>
+
+              <div class="two">
+                <div><label>dateProhibited *</label><input id="cpDateProhibited" type="datetime-local" required /></div>
+                <div><label>dateExit *</label><input id="cpDateExit" type="datetime-local" required /></div>
+              </div>
+
+              <div class="two">
+                <div><label>slug</label><input id="cpSlug" placeholder="nike-10" /></div>
+                <div><label>imgUrl *</label><input id="cpImg" required placeholder="https://..." /></div>
+              </div>
+
+              <div class="two">
+                <div><label>storeId *</label><select id="cpStoreId"></select></div>
+                <div><label>categoryId *</label><select id="cpCategoryId"></select></div>
+              </div>
+
+              <div class="btns">
+                <button type="submit" class="primary" id="couponBtnSave">Salvar</button>
+                <button type="button" class="ghost" id="couponBtnReset">Limpar</button>
+                <button type="button" class="danger" id="couponBtnDelete" style="display:none;">Excluir</button>
+              </div>
+
+              <div class="msg">
+                • Se /coupons falhar, o painel continua funcionando para categorias/lojas (carregamento isolado).<br>
+                • Sem um ID retornado no GET /coupons, não dá pra editar/excluir por /coupons/{id}.
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-h"><b>Lista de cupons</b><span class="pill mono">/coupons</span></div>
+          <div class="toolbar">
+            <input id="couponSearch" class="search" placeholder="Buscar por título / código / slug..." />
+            <select id="couponFilterActive" style="width:190px">
+              <option value="all">Todos</option><option value="true">Ativos</option><option value="false">Inativos</option>
+            </select>
+          </div>
+          <div style="overflow:auto">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th style="width:210px">ID</th>
+                  <th>Título</th>
+                  <th>Código</th>
+                  <th>Slug</th>
+                  <th style="width:120px">Ativo</th>
+                  <th style="width:320px">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="couponTbody"><tr><td colspan="6" class="muted">Carregando...</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </section>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite">
+    <div id="toastDot" class="dot"></div>
+    <div><b id="toastTitle">Mensagem</b><p id="toastMsg">...</p></div>
+  </div>
+
+<script>
+  const API_BASE = "http://localhost:8080";
+  const EP = { cat:"/categoria", store:"/store", coupons:"/coupons" };
+
+  let categories = [];
+  let stores = [];
+  let coupons = [];
+
+  let editingCatId = null;
+  let editingStoreId = null;
+  let editingCouponId = null;
+
+  const $ = (id) => document.getElementById(id);
+
+  function showToast(type, title, msg){
+    const toast = $("toast");
+    const dot = $("toastDot");
+    dot.className = "dot" + (type === "ok" ? " ok" : type === "bad" ? " bad" : type === "warn" ? " warn" : "");
+    $("toastTitle").textContent = title;
+    $("toastMsg").textContent = msg;
+    toast.classList.add("show");
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => toast.classList.remove("show"), 3600);
+  }
+
+  function setApiStatus(ok, text){
+    const el = $("apiStatus");
+    el.textContent = "API: " + text;
+    el.className = "pill " + (ok ? "ok" : "off");
+  }
+
+  function escapeHtml(str){
+    return String(str ?? "")
+      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+  }
+
+  function slugify(str){
+    return (str || "")
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase().trim()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-");
+  }
+
+  function toBool(v){
+    if (v === true || v === false) return v;
+    if (v === null || v === undefined) return false;
+    if (typeof v === "string"){
+      const s = v.trim().toLowerCase();
+      if (s === "true") return true;
+      if (s === "false") return false;
+    }
+    return Boolean(v);
+  }
+
+  function toIsoFromDatetimeLocal(v){
+    if (!v) return null;
+    return v.length === 16 ? (v + ":00") : v;
+  }
+
+  function fromIsoToDatetimeLocal(v){
+    if (!v) return "";
+    return String(v).slice(0,16);
+  }
+
+  async function apiFetch(path, options = {}){
+    const url = API_BASE + path;
+    const headers = Object.assign({ "Content-Type":"application/json" }, options.headers || {});
+    const res = await fetch(url, { ...options, headers });
+
+    const ct = res.headers.get("content-type") || "";
+    let bodyJson=null, bodyText="";
+    if (ct.includes("application/json")) { try{ bodyJson = await res.json(); }catch{} }
+    else { try{ bodyText = await res.text(); }catch{} }
+
+    if (!res.ok){
+      const msg = (bodyJson && (bodyJson.message || bodyJson.error || bodyJson.details || JSON.stringify(bodyJson)))
+        || bodyText || ("HTTP " + res.status);
+      const err = new Error(msg);
+      err.status = res.status;
+      err.body = bodyJson ?? bodyText;
+      throw err;
+    }
+    return bodyJson ?? bodyText;
+  }
+
+  // ===== API =====
+  const listCategories = () => apiFetch(EP.cat, { method:"GET" });
+  const createCategory = (p) => apiFetch(EP.cat, { method:"POST", body: JSON.stringify(p) });
+  const updateCategory = (id, p) => apiFetch(`${EP.cat}/${id}`, { method:"PUT", body: JSON.stringify(p) });
+  const deleteCategory = (id) => apiFetch(`${EP.cat}/${id}`, { method:"DELETE" });
+
+  const listStores = () => apiFetch(EP.store, { method:"GET" });
+  const createStore = (p) => apiFetch(EP.store, { method:"POST", body: JSON.stringify(p) });
+  const updateStore = (id, p) => apiFetch(`${EP.store}/${id}`, { method:"PUT", body: JSON.stringify(p) });
+  const deleteStore = (id) => apiFetch(`${EP.store}/${id}`, { method:"DELETE" });
+
+  const listCoupons = () => apiFetch(EP.coupons, { method:"GET" });
+  const createCoupon = (p) => apiFetch(EP.coupons, { method:"POST", body: JSON.stringify(p) });
+  const updateCoupon = (id, p) => apiFetch(`${EP.coupons}/${id}`, { method:"PUT", body: JSON.stringify(p) });
+  const deleteCoupon = (id) => apiFetch(`${EP.coupons}/${id}`, { method:"DELETE" });
+
+  // ===== Tabs =====
+  function setTab(which){
+    $("panelCat").classList.toggle("hidden", which !== "cat");
+    $("panelStore").classList.toggle("hidden", which !== "store");
+    $("panelCoupon").classList.toggle("hidden", which !== "coupon");
+    $("tabCat").classList.toggle("active", which === "cat");
+    $("tabStore").classList.toggle("active", which === "store");
+    $("tabCoupon").classList.toggle("active", which === "coupon");
+  }
+  $("tabCat").addEventListener("click", () => setTab("cat"));
+  $("tabStore").addEventListener("click", () => setTab("store"));
+  $("tabCoupon").addEventListener("click", () => setTab("coupon"));
+
+  // ===== Dropdowns for coupons (com placeholder para não quebrar) =====
+  function renderStoreOptions(){
+    const sel = $("cpStoreId");
+    if (!stores.length){
+      sel.innerHTML = `<option value="">(crie uma loja primeiro)</option>`;
+      return;
+    }
+    sel.innerHTML =
+      `<option value="">Selecione...</option>` +
+      stores.map(s => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.storeName)} — ${escapeHtml(s.id)}</option>`).join("");
+  }
+
+  function renderCategoryOptions(){
+    const sel = $("cpCategoryId");
+    if (!categories.length){
+      sel.innerHTML = `<option value="">(crie uma categoria primeiro)</option>`;
+      return;
+    }
+    sel.innerHTML =
+      `<option value="">Selecione...</option>` +
+      categories.map(c => `<option value="${escapeHtml(c.categoryId)}">${escapeHtml(c.categoryName)} — ${escapeHtml(c.categoryId)}</option>`).join("");
+  }
+
+  // ===== CATEGORIES UI =====
+  function setCatFormCreate(){
+    editingCatId = null;
+    $("catFormTitle").textContent = "Nova categoria";
+    $("catModePill").textContent = "modo: criar";
+    $("catId").value = "";
+    $("catBtnDelete").style.display = "none";
+    $("catBtnSave").textContent = "Salvar";
+  }
+
+  function setCatFormEdit(cat){
+    editingCatId = cat.categoryId;
+    $("catFormTitle").textContent = "Editar categoria";
+    $("catModePill").textContent = "modo: editar";
+    $("catId").value = cat.categoryId || "";
+    $("catName").value = cat.categoryName || "";
+    $("catSlug").value = cat.categorySlug || "";
+    $("catActive").value = String(toBool(cat.active));
+    $("catBtnDelete").style.display = "inline-block";
+    $("catBtnSave").textContent = "Atualizar";
+  }
+
+  function getFilteredCats(){
+    const q = ($("catSearch").value || "").toLowerCase().trim();
+    const fa = $("catFilterActive").value;
+    return categories.filter(c => {
+      const id = String(c.categoryId||"").toLowerCase();
+      const name = String(c.categoryName||"").toLowerCase();
+      const slug = String(c.categorySlug||"").toLowerCase();
+      const active = String(toBool(c.active));
+      const matchesQ = !q || id.includes(q) || name.includes(q) || slug.includes(q);
+      const matchesA = (fa==="all") || (active===fa);
+      return matchesQ && matchesA;
+    });
+  }
+
+  function renderCats(){
+    const list = getFilteredCats();
+    const tbody = $("catTbody");
+    if (!list.length){ tbody.innerHTML = `<tr><td colspan="5" class="muted">Nenhuma categoria.</td></tr>`; return; }
+
+    tbody.innerHTML = list.map(c => {
+      const isActive = toBool(c.active);
+      const pill = isActive ? `<span class="pill ok">true</span>` : `<span class="pill off">false</span>`;
+      return `
+        <tr>
+          <td class="mono">${escapeHtml(c.categoryId)}</td>
+          <td>${escapeHtml(c.categoryName)}</td>
+          <td class="mono">${escapeHtml(c.categorySlug)}</td>
+          <td>${pill}</td>
+          <td>
+            <div class="actions">
+              <button type="button" class="info" data-cat-act="edit" data-id="${escapeHtml(c.categoryId)}">Editar</button>
+              <button type="button" class="warn" data-cat-act="toggle" data-id="${escapeHtml(c.categoryId)}">${isActive ? "Desativar" : "Ativar"}</button>
+              <button type="button" class="danger" data-cat-act="del" data-id="${escapeHtml(c.categoryId)}">Excluir</button>
+            </div>
+          </td>
+        </tr>`;
+    }).join("");
+  }
+
+  // ===== STORES UI =====
+  function setStoreFormCreate(){
+    editingStoreId = null;
+    $("storeFormTitle").textContent = "Nova loja";
+    $("storeModePill").textContent = "modo: criar";
+    $("storeId").value = "";
+    $("storeBtnDelete").style.display = "none";
+    $("storeBtnSave").textContent = "Salvar";
+  }
+
+  function setStoreFormEdit(s){
+    editingStoreId = s.id;
+    $("storeFormTitle").textContent = "Editar loja";
+    $("storeModePill").textContent = "modo: editar";
+    $("storeId").value = s.id || "";
+    $("storeName").value = s.storeName || "";
+    $("storeSlug").value = s.storeSlug || "";
+    $("storeAddress").value = s.storeAddress || "";
+    $("storeImg").value = s.storeImg || "";
+    $("storeDesc").value = s.storeDescription || "";
+    $("storeActive").value = String(toBool(s.active));
+    $("storeBtnDelete").style.display = "inline-block";
+    $("storeBtnSave").textContent = "Atualizar";
+  }
+
+  function getFilteredStores(){
+    const q = ($("storeSearch").value || "").toLowerCase().trim();
+    const fa = $("storeFilterActive").value;
+    return stores.filter(s => {
+      const id = String(s.id||"").toLowerCase();
+      const name = String(s.storeName||"").toLowerCase();
+      const slug = String(s.storeSlug||"").toLowerCase();
+      const addr = String(s.storeAddress||"").toLowerCase();
+      const active = String(toBool(s.active));
+      const matchesQ = !q || id.includes(q) || name.includes(q) || slug.includes(q) || addr.includes(q);
+      const matchesA = (fa==="all") || (active===fa);
+      return matchesQ && matchesA;
+    });
+  }
+
+  function renderStores(){
+    const list = getFilteredStores();
+    const tbody = $("storeTbody");
+    if (!list.length){ tbody.innerHTML = `<tr><td colspan="6" class="muted">Nenhuma loja.</td></tr>`; return; }
+
+    tbody.innerHTML = list.map(s => {
+      const isActive = toBool(s.active);
+      const pill = isActive ? `<span class="pill ok">true</span>` : `<span class="pill off">false</span>`;
+      return `
+        <tr>
+          <td class="mono">${escapeHtml(s.id)}</td>
+          <td>
+            ${escapeHtml(s.storeName)}
+            ${s.storeDescription ? `<div class="muted" style="margin-top:6px;max-width:520px">${escapeHtml(s.storeDescription)}</div>` : ""}
+          </td>
+          <td class="mono">${escapeHtml(s.storeSlug)}</td>
+          <td>${escapeHtml(s.storeAddress)}</td>
+          <td>${pill}</td>
+          <td>
+            <div class="actions">
+              <button type="button" class="info" data-store-act="edit" data-id="${escapeHtml(s.id)}">Editar</button>
+              <button type="button" class="warn" data-store-act="toggle" data-id="${escapeHtml(s.id)}">${isActive ? "Desativar" : "Ativar"}</button>
+              <button type="button" class="danger" data-store-act="del" data-id="${escapeHtml(s.id)}">Excluir</button>
+            </div>
+          </td>
+        </tr>`;
+    }).join("");
+  }
+
+  // ===== COUPONS UI =====
+  function getCouponId(c){
+    return c?.id || c?.couponId || c?.cupomId || null;
+  }
+
+  function setCouponFormCreate(){
+    editingCouponId = null;
+    $("couponFormTitle").textContent = "Novo cupom";
+    $("couponModePill").textContent = "modo: criar";
+    $("couponId").value = "";
+    $("couponBtnDelete").style.display = "none";
+    $("couponBtnSave").textContent = "Salvar";
+  }
+
+  function setCouponFormEdit(c){
+    editingCouponId = getCouponId(c);
+    $("couponFormTitle").textContent = "Editar cupom";
+    $("couponModePill").textContent = "modo: editar";
+    $("couponId").value = editingCouponId || "";
+
+    $("cpTitle").value = c.title || "";
+    $("cpCode").value = c.code || "";
+    $("cpDesc").value = c.description || "";
+    $("cpDiscount").value = (c.discount ?? "") === null ? "" : String(c.discount ?? "");
+    $("cpRestrictions").value = c.restrictions || "";
+    $("cpDateProhibited").value = fromIsoToDatetimeLocal(c.dateProhibited);
+    $("cpDateExit").value = fromIsoToDatetimeLocal(c.dateExit);
+    $("cpSlug").value = c.slug || "";
+    $("cpActive").value = String(toBool(c.active));
+    $("cpImg").value = c.imgUrl || "";
+
+    if (c.storeId) $("cpStoreId").value = c.storeId;
+    if (c.categoryId) $("cpCategoryId").value = c.categoryId;
+
+    $("couponBtnDelete").style.display = "inline-block";
+    $("couponBtnSave").textContent = "Atualizar";
+  }
+
+  function getFilteredCoupons(){
+    const q = ($("couponSearch").value || "").toLowerCase().trim();
+    const fa = $("couponFilterActive").value;
+    return coupons.filter(c => {
+      const title = String(c.title||"").toLowerCase();
+      const code = String(c.code||"").toLowerCase();
+      const slug = String(c.slug||"").toLowerCase();
+      const active = String(toBool(c.active));
+      const matchesQ = !q || title.includes(q) || code.includes(q) || slug.includes(q);
+      const matchesA = (fa==="all") || (active===fa);
+      return matchesQ && matchesA;
+    });
+  }
+
+  function renderCoupons(){
+    const list = getFilteredCoupons();
+    const tbody = $("couponTbody");
+    if (!list.length){ tbody.innerHTML = `<tr><td colspan="6" class="muted">Nenhum cupom.</td></tr>`; return; }
+
+    tbody.innerHTML = list.map(c => {
+      const id = getCouponId(c);
+      const isActive = toBool(c.active);
+      const pill = isActive ? `<span class="pill ok">true</span>` : `<span class="pill off">false</span>`;
+      const idTxt = id ?? "(sem id)";
+      const disabled = id ? "" : "disabled";
+      const title = id ? "Editar" : "Sem ID";
+      return `
+        <tr>
+          <td class="mono">${escapeHtml(idTxt)}</td>
+          <td>${escapeHtml(c.title)}</td>
+          <td class="mono">${escapeHtml(c.code)}</td>
+          <td class="mono">${escapeHtml(c.slug)}</td>
+          <td>${pill}</td>
+          <td>
+            <div class="actions">
+              <button type="button" class="info" data-cp-act="edit" data-id="${escapeHtml(id||"")}" ${disabled}>${title}</button>
+              <button type="button" class="warn" data-cp-act="toggle" data-id="${escapeHtml(id||"")}" ${disabled}>${isActive ? "Desativar" : "Ativar"}</button>
+              <button type="button" class="danger" data-cp-act="del" data-id="${escapeHtml(id||"")}" ${disabled}>Excluir</button>
+            </div>
+            <div class="muted" style="margin-top:6px">
+              loja: <span class="mono">${escapeHtml(c.storeId ?? "")}</span> • categoria: <span class="mono">${escapeHtml(c.categoryId ?? "")}</span>
+            </div>
+          </td>
+        </tr>`;
+    }).join("");
+  }
+
+  // ===== Reload / Ping (carregamento isolado: cupons não derrubam o resto) =====
+  async function reloadAll(){
+    $("catTbody").innerHTML = `<tr><td colspan="5" class="muted">Carregando...</td></tr>`;
+    $("storeTbody").innerHTML = `<tr><td colspan="6" class="muted">Carregando...</td></tr>`;
+    $("couponTbody").innerHTML = `<tr><td colspan="6" class="muted">Carregando...</td></tr>`;
+
+    let okCount = 0;
+    let failCount = 0;
+
+    // categorias
+    try {
+      const catData = await listCategories();
+      categories = (Array.isArray(catData) ? catData : (catData?.content || []))
+        .map(c => ({...c, active: toBool(c.active)}));
+      renderCats();
+      renderCategoryOptions();
+      okCount++;
+    } catch (err) {
+      failCount++;
+      $("catTbody").innerHTML = `<tr><td colspan="5" class="muted">Erro em /categoria: ${escapeHtml(err.message)}</td></tr>`;
+      showToast("warn", "Falha em categorias", err.message);
+    }
+
+    // lojas
+    try {
+      const storeData = await listStores();
+      stores = (Array.isArray(storeData) ? storeData : (storeData?.content || []))
+        .map(s => ({...s, active: toBool(s.active)}));
+      renderStores();
+      renderStoreOptions();
+      okCount++;
+    } catch (err) {
+      failCount++;
+      $("storeTbody").innerHTML = `<tr><td colspan="6" class="muted">Erro em /store: ${escapeHtml(err.message)}</td></tr>`;
+      showToast("warn", "Falha em lojas", err.message);
+    }
+
+    // cupons (não trava o painel)
+    try {
+      const couponData = await listCoupons();
+      coupons = (Array.isArray(couponData) ? couponData : (couponData?.content || []))
+        .map(c => ({...c, active: toBool(c.active)}));
+      renderCoupons();
+      okCount++;
+    } catch (err) {
+      failCount++;
+      $("couponTbody").innerHTML = `<tr><td colspan="6" class="muted">Cupons indisponíveis: ${escapeHtml(err.message)}</td></tr>`;
+      showToast("warn", "Cupons não carregaram", "Categorias/Lojas continuam OK. Verifique /coupons.");
+    }
+
+    if (okCount > 0 && failCount === 0) setApiStatus(true, "online");
+    else if (okCount > 0 && failCount > 0) setApiStatus(true, "parcial (algumas rotas falharam)");
+    else setApiStatus(false, "offline/erro");
+  }
+
+  async function ping(){
+    const results = [];
+
+    async function testOne(label, fn){
+      try { await fn(); results.push(`✅ ${label}`); }
+      catch (e) { results.push(`❌ ${label}: ${e.message}`); }
+    }
+
+    await testOne("/categoria", listCategories);
+    await testOne("/store", listStores);
+    await testOne("/coupons", listCoupons);
+
+    const ok = results.some(r => r.startsWith("✅"));
+    setApiStatus(ok, ok ? "online/parcial" : "offline/erro");
+    showToast(ok ? "ok" : "bad", "Ping rotas", results.join("\n"));
+  }
+
+  $("btnReload").addEventListener("click", reloadAll);
+  $("btnPing").addEventListener("click", ping);
+
+  // ===== EVENTS: Categories =====
+  $("catSearch").addEventListener("input", renderCats);
+  $("catFilterActive").addEventListener("change", renderCats);
+
+  $("catBtnReset").addEventListener("click", () => { $("catForm").reset(); $("catId").value=""; setCatFormCreate(); });
+
+  $("catForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const categoryName = $("catName").value.trim();
+    let categorySlug = $("catSlug").value.trim();
+    const active = $("catActive").value === "true";
+
+    if (!categoryName){ showToast("warn","Validação","categoryName é obrigatório."); return; }
+    if (!categorySlug) categorySlug = slugify(categoryName);
+
+    const payload = { categoryName, categorySlug, active };
+
+    try{
+      if (!editingCatId){
+        await createCategory(payload);
+        showToast("ok","Criado","Categoria criada.");
+      } else {
+        payload.categoryId = editingCatId;
+        await updateCategory(editingCatId, payload);
+        showToast("ok","Atualizado","Categoria atualizada.");
+      }
+      $("catForm").reset(); setCatFormCreate(); await reloadAll();
+    }catch(err){
+      showToast("bad","Erro ao salvar", err.message);
+    }
+  });
+
+  $("catBtnDelete").addEventListener("click", async () => {
+    if (!editingCatId) return;
+    if (!confirm("Excluir categoria?")) return;
+    try{
+      await deleteCategory(editingCatId);
+      showToast("ok","Excluído","Categoria removida.");
+      $("catForm").reset(); setCatFormCreate(); await reloadAll();
+    }catch(err){
+      const msg = String(err.message||"");
+      if (msg.includes("foreign key") || msg.includes("23503") || msg.includes("referenced")){
+        showToast("warn","Não pode excluir","Existem cupons vinculados. Desative a categoria.");
+      } else showToast("bad","Erro ao excluir", err.message);
+    }
+  });
+
+  $("catTbody").addEventListener("click", async (e) => {
+    const btn = e.target.closest("button"); if (!btn) return;
+    const act = btn.getAttribute("data-cat-act");
+    const id = btn.getAttribute("data-id");
+    const cat = categories.find(c => String(c.categoryId) === String(id));
+    if (!cat) return;
+
+    if (act === "edit"){ setCatFormEdit(cat); window.scrollTo({top:0,behavior:"smooth"}); return; }
+
+    if (act === "toggle"){
+      try{
+        const next = !toBool(cat.active);
+        const payload = { categoryId: cat.categoryId, categoryName: cat.categoryName, categorySlug: cat.categorySlug, active: next };
+        await updateCategory(cat.categoryId, payload);
+        showToast("ok","Atualizado", `active = ${next}`);
+        await reloadAll();
+      }catch(err){ showToast("bad","Erro ao atualizar", err.message); }
+      return;
+    }
+
+    if (act === "del"){
+      if (!confirm("Excluir categoria?")) return;
+      try{
+        await deleteCategory(cat.categoryId);
+        showToast("ok","Excluído","Categoria removida.");
+        if (editingCatId === cat.categoryId) setCatFormCreate();
+        await reloadAll();
+      }catch(err){
+        const msg = String(err.message||"");
+        if (msg.includes("foreign key") || msg.includes("23503") || msg.includes("referenced")){
+          showToast("warn","Não pode excluir","Existem cupons vinculados. Desative a categoria.");
+        } else showToast("bad","Erro ao excluir", err.message);
+      }
+      return;
+    }
+  });
+
+  // ===== EVENTS: Stores =====
+  $("storeSearch").addEventListener("input", renderStores);
+  $("storeFilterActive").addEventListener("change", renderStores);
+
+  $("storeBtnReset").addEventListener("click", () => { $("storeForm").reset(); $("storeId").value=""; setStoreFormCreate(); });
+
+  $("storeForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const storeName = $("storeName").value.trim();
+    const storeAddress = $("storeAddress").value.trim();
+    let storeSlug = $("storeSlug").value.trim();
+    const storeImg = $("storeImg").value.trim();
+    const storeDescription = $("storeDesc").value.trim();
+    const active = $("storeActive").value === "true";
+
+    if (!storeName || storeName.length < 3){ showToast("warn","Validação","storeName mínimo 3."); return; }
+    if (!storeAddress){ showToast("warn","Validação","storeAddress é obrigatório."); return; }
+    if (!storeSlug) storeSlug = slugify(storeName);
+
+    const payload = {
+      storeName, storeAddress,
+      storeImg: storeImg || null,
+      storeDescription: storeDescription || null,
+      storeSlug,
+      active
+    };
+
+    try{
+      if (!editingStoreId){
+        await createStore(payload);
+        showToast("ok","Criado","Loja criada.");
+      } else {
+        payload.id = editingStoreId;
+        await updateStore(editingStoreId, payload);
+        showToast("ok","Atualizado","Loja atualizada.");
+      }
+      $("storeForm").reset(); setStoreFormCreate(); await reloadAll();
+    }catch(err){
+      showToast("bad","Erro ao salvar", err.message);
+    }
+  });
+
+  $("storeBtnDelete").addEventListener("click", async () => {
+    if (!editingStoreId) return;
+    if (!confirm("Excluir loja?")) return;
+    try{
+      await deleteStore(editingStoreId);
+      showToast("ok","Excluído","Loja removida.");
+      $("storeForm").reset(); setStoreFormCreate(); await reloadAll();
+    }catch(err){ showToast("bad","Erro ao excluir", err.message); }
+  });
+
+  $("storeTbody").addEventListener("click", async (e) => {
+    const btn = e.target.closest("button"); if (!btn) return;
+    const act = btn.getAttribute("data-store-act");
+    const id = btn.getAttribute("data-id");
+    const s = stores.find(x => String(x.id) === String(id));
+    if (!s) return;
+
+    if (act === "edit"){ setStoreFormEdit(s); window.scrollTo({top:0,behavior:"smooth"}); return; }
+
+    if (act === "toggle"){
+      try{
+        const next = !toBool(s.active);
+        const payload = {
+          id: s.id, storeName: s.storeName, storeAddress: s.storeAddress,
+          storeImg: s.storeImg ?? null, storeDescription: s.storeDescription ?? null,
+          storeSlug: s.storeSlug, active: next
+        };
+        await updateStore(s.id, payload);
+        showToast("ok","Atualizado", `active = ${next}`);
+        await reloadAll();
+      }catch(err){ showToast("bad","Erro ao atualizar", err.message); }
+      return;
+    }
+
+    if (act === "del"){
+      if (!confirm("Excluir loja?")) return;
+      try{
+        await deleteStore(s.id);
+        showToast("ok","Excluído","Loja removida.");
+        if (editingStoreId === s.id) setStoreFormCreate();
+        await reloadAll();
+      }catch(err){ showToast("bad","Erro ao excluir", err.message); }
+      return;
+    }
+  });
+
+  // ===== EVENTS: Coupons =====
+  $("couponSearch").addEventListener("input", renderCoupons);
+  $("couponFilterActive").addEventListener("change", renderCoupons);
+
+  $("couponBtnReset").addEventListener("click", () => { $("couponForm").reset(); $("couponId").value=""; setCouponFormCreate(); });
+
+  $("couponForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const title = $("cpTitle").value.trim();
+    const description = $("cpDesc").value.trim();
+    const code = $("cpCode").value.trim();
+    const discountRaw = $("cpDiscount").value.trim();
+    const restrictions = $("cpRestrictions").value.trim();
+    const dateProhibited = toIsoFromDatetimeLocal($("cpDateProhibited").value);
+    const dateExit = toIsoFromDatetimeLocal($("cpDateExit").value);
+    let slug = $("cpSlug").value.trim();
+    const active = $("cpActive").value === "true";
+    const imgUrl = $("cpImg").value.trim();
+    const storeId = $("cpStoreId").value;
+    const categoryId = $("cpCategoryId").value;
+
+    if (!title){ showToast("warn","Validação","title é obrigatório."); return; }
+    if (!description){ showToast("warn","Validação","description é obrigatório."); return; }
+    if (!code){ showToast("warn","Validação","code é obrigatório."); return; }
+    if (!dateProhibited){ showToast("warn","Validação","dateProhibited é obrigatório."); return; }
+    if (!dateExit){ showToast("warn","Validação","dateExit é obrigatório."); return; }
+    if (!imgUrl){ showToast("warn","Validação","imgUrl é obrigatório."); return; }
+    if (!storeId){ showToast("warn","Validação","storeId é obrigatório."); return; }
+    if (!categoryId){ showToast("warn","Validação","categoryId é obrigatório."); return; }
+    if (!slug) slug = slugify(code);
+
+    let discount = null;
+    if (discountRaw){
+      const normalized = discountRaw.replace(",", ".");
+      if (isNaN(Number(normalized))){
+        showToast("warn","Validação","discount inválido (use 20.00).");
+        return;
+      }
+      discount = normalized;
+    }
+
+    const payload = {
+      title, description, code,
+      discount: discount ? Number(discount) : null,
+      restrictions: restrictions || null,
+      dateProhibited,
+      dateExit,
+      slug: slug || null,
+      active,
+      imgUrl,
+      storeId,
+      categoryId
+    };
+
+    try{
+      if (!editingCouponId){
+        await createCoupon(payload);
+        showToast("ok","Criado","Cupom criado.");
+      } else {
+        await updateCoupon(editingCouponId, payload);
+        showToast("ok","Atualizado","Cupom atualizado.");
+      }
+      $("couponForm").reset(); setCouponFormCreate(); await reloadAll();
+    }catch(err){
+      showToast("bad","Erro ao salvar", err.message);
+    }
+  });
+
+  $("couponBtnDelete").addEventListener("click", async () => {
+    if (!editingCouponId) return;
+    if (!confirm("Excluir cupom?")) return;
+    try{
+      await deleteCoupon(editingCouponId);
+      showToast("ok","Excluído","Cupom removido.");
+      $("couponForm").reset(); setCouponFormCreate(); await reloadAll();
+    }catch(err){ showToast("bad","Erro ao excluir", err.message); }
+  });
+
+  $("couponTbody").addEventListener("click", async (e) => {
+    const btn = e.target.closest("button"); if (!btn) return;
+    const act = btn.getAttribute("data-cp-act");
+    const id = btn.getAttribute("data-id");
+    if (!id){
+      showToast("warn","Sem ID","Seu GET /coupons não retorna id. Sem id não dá pra editar/excluir por /coupons/{id}.");
+      return;
+    }
+    const c = coupons.find(x => String(getCouponId(x)) === String(id));
+    if (!c) return;
+
+    if (act === "edit"){ setCouponFormEdit(c); window.scrollTo({top:0,behavior:"smooth"}); return; }
+
+    if (act === "toggle"){
+      try{
+        const next = !toBool(c.active);
+        const payload = {
+          title: c.title, description: c.description, code: c.code,
+          discount: c.discount ?? null,
+          restrictions: c.restrictions ?? null,
+          dateProhibited: c.dateProhibited,
+          dateExit: c.dateExit,
+          slug: c.slug ?? null,
+          active: next,
+          imgUrl: c.imgUrl,
+          storeId: c.storeId,
+          categoryId: c.categoryId
+        };
+        await updateCoupon(getCouponId(c), payload);
+        showToast("ok","Atualizado", `active = ${next}`);
+        await reloadAll();
+      }catch(err){ showToast("bad","Erro ao atualizar", err.message); }
+      return;
+    }
+
+    if (act === "del"){
+      if (!confirm("Excluir cupom?")) return;
+      try{
+        await deleteCoupon(getCouponId(c));
+        showToast("ok","Excluído","Cupom removido.");
+        if (editingCouponId === getCouponId(c)) setCouponFormCreate();
+        await reloadAll();
+      }catch(err){ showToast("bad","Erro ao excluir", err.message); }
+      return;
+    }
+  });
+
+  // ===== Boot =====
+  setCatFormCreate();
+  setStoreFormCreate();
+  setCouponFormCreate();
+  setTab("cat");
+  reloadAll();
+</script>
+</body>
+</html>
